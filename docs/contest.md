@@ -29,8 +29,8 @@ permalink: /contest
 4. 创建`room`后，后端与 `docker` 服务器通信，创建比赛`docker`，开启比赛。
    1. 比赛状态显示。后端创建 `docker` 分为两步：【第一步】是将比赛放入队列`docker_queue`尾，此时`room` -> `status` 为 `Waiting`；【第二步】是`docker_cron` 定时程序从队列中抽取队首的比赛进行，如果比赛启动成功，此时`room` -> `status`为`Running`。前端应当根据`status`显示比赛状态。
    2. 比赛期间，用户可通过特定端口观看直播。后端在上面所述启动比赛的【第二步】时分配好一个端口。如果端口数量不足，则不启动比赛。如果成功分配端口并启动比赛，则应更新数据库`contest_room`表中的`port`字段，此时`status`字段已经更新为`Running`，则前端可以查看`port`字段并提供直播观看接口。
-5. `docker` 服务器结束比赛后向后端通信，后端更新数据库，更新`contest_room`表中的`status`为`Finished`，更新`contest_room_team`表中的`score`字段，为这场比赛的每个队伍记录分数，更新比赛结果，并更新`contest_team`表中的天梯积分`arena_score`。后端将比赛回放文件上传至 `cos`。具体路径参考[COS存储桶访问路径 | EESAST](https://eesast.github.io/web/cos)。
-6. 比赛结束后，前端提供下载回放接口。前端按照[COS存储桶访问路径 | EESAST](https://eesast.github.io/web/cos)中约定的路径从`cos`下载对应的文件。
+5. `docker` 服务器结束比赛后向后端通信，后端更新数据库，更新`contest_room`表中的`status`为`Finished`，更新`contest_room_team`表中的`score`字段，为这场比赛的每个队伍记录分数，更新比赛结果，并更新`contest_team`表中的天梯积分`arena_score`。后端将比赛回放文件上传至 `cos`。具体路径参考[COS存储桶访问路径](https://eesast.github.io/web/cos)。
+6. 比赛结束后，前端提供下载回放接口。前端按照[COS存储桶访问路径](https://eesast.github.io/web/cos)中约定的路径从`cos`下载对应的文件。
 
 ### 接口描述
 
@@ -44,7 +44,7 @@ permalink: /contest
     1.  鉴权。检查登录状态，及用户是否在队伍中。
     2.  限制开战频率。同一队伍不能同时打多于6场的比赛。
     3.  接下来检查代码和队伍是否准备完成，若队伍角色未分配代码，或代码未编译，则报错。
-    4.  后端需要从`cos`上临时下载队伍的代码或编译文件到服务器上。文件路径参考[COS存储桶访问路径 | EESAST](https://eesast.github.io/web/cos)。服务器存储空间有限，需要定期清理下载的队伍代码和文件。如果`cos`上找不到对应的编译文件，则报错。
+    4.  后端需要从`cos`上临时下载队伍的代码或编译文件到服务器上。文件路径参考[COS存储桶访问路径](https://eesast.github.io/web/cos)。服务器存储空间有限，需要定期清理下载的队伍代码和文件。如果`cos`上找不到对应的编译文件，则报错。
     5.  后端在数据表`contest_room`中创建 `room`，更新`status`为`Waiting`，并在`contest_room_team`中绑定`room`和`team`，并返回创建是否成功的结果，以及`room_id`。
     6.  后端将比赛数据存入`docker_queue`中，等待`docker_cron`发起比赛。
   - 错误：
